@@ -11,18 +11,22 @@ public class Game {
     private Player whitePlayer;
     private Player blackPlayer;
     private String currentTurn;
+    private SimpleAI ai;
 
     public Game() {
         board = new Board();
         whitePlayer = new Player("White");
         blackPlayer = new Player("Black");
         currentTurn = "White";
+        ai = new SimpleAI();
     }
 
     public void start() {
         Scanner scanner = new Scanner(System.in);
 
         System.out.println("Welcome to Console Chess!");
+        System.out.println("Extra Credit B: AI opponent is enabled.");
+        System.out.println("You are White. The AI plays Black.");
         System.out.println("Enter moves in format: E2 E4");
         System.out.println("Type 'exit' to quit.\n");
 
@@ -60,6 +64,19 @@ public class Game {
             }
 
             switchTurn();
+
+            if (currentTurn.equals("Black")) {
+                ai.makeMove(board);
+
+                if (board.isKingCaptured()) {
+                    board.display();
+                    System.out.println("Black wins! The opponent's king was captured.");
+                    break;
+                }
+
+                switchTurn();
+            }
+
             System.out.println();
         }
 

@@ -1,95 +1,139 @@
-# Chess Game – Phase 1
+# Chess Game Project – Phase 3
 
-## Overview
-This project is a console-based chess game written in Java. It allows two players to play chess by entering moves through the terminal. The program includes a fully initialized board, piece movement, capturing, turn handling, and input validation.
+## Project Overview
+This project is a GUI-based Chess Game developed in Java for CS3354.  
+The application integrates backend chess logic with a graphical user interface to create a fully interactive chess experience.
 
----
-
-## Features
-
-### 1. Board Initialization
-- 8x8 chessboard
-- All pieces placed in correct starting positions
-- Black pieces on top (rows 0–1)
-- White pieces on bottom (rows 6–7)
-
-### 2. Piece System
-Each piece is implemented as its own class:
-- Pawn
-- Rook
-- Knight
-- Bishop
-- Queen
-- King
-
-All pieces inherit from an abstract `Piece` class.
-
-### 3. Board Display
-- Board is printed in the console
-- Columns labeled A–H
-- Rows labeled 1–8
-- Pieces displayed as:
-    - White: WP, WR, WN, WB, WQ, WK
-    - Black: BP, BR, BN, BB, BQ, BK
+The project demonstrates:
+- Object-Oriented Programming
+- Inheritance and polymorphism
+- GUI development
+- Backend/frontend integration
+- Chess rule enforcement
+- Event-driven programming
 
 ---
 
-### 4. Input Parsing
-- Users enter moves in format:
-- - Program validates:
-- Correct format
-- Valid board positions (A–H, 1–8)
+# Features Implemented
+
+## Core Features
+- Interactive GUI chess board
+- Turn-based gameplay
+- Piece movement validation
+- Legal move checking
+- Piece captures
+- Backend game state synchronization with GUI
+- Visual board updates after every move
+- Basic check/checkmate handling
+- Object-oriented chess piece hierarchy
 
 ---
 
-### 5. Turn-Based Gameplay
-- Alternates between White and Black
-- Only current player can move their pieces
+# Extra Credit A Features
+
+## README Quality Improvements
+This README includes:
+- Project overview
+- Feature list
+- Run instructions
+- AI usage log
+- Preview information
+- Organized documentation
+
+## Incremental Development Process
+The repository commit history reflects:
+- GUI development
+- Backend integration
+- Debugging and testing
+- README/documentation refinement
+- UML preparation
+- Extra feature additions
+
+## AI Usage Log
+AI assistance was used to:
+- Review project requirements
+- Help organize the README structure
+- Clarify backend/GUI integration ideas
+- Help explain software design concepts
+- Assist with debugging explanations and documentation formatting
+
+All AI suggestions were reviewed and selectively implemented only when they matched the actual project requirements and functionality.
 
 ---
 
-### 6. Movement Rules
-Basic movement rules implemented:
+# Extra Credit B – AI Chess Opponent
 
-- Pawn:
-- Moves forward 1 square
-- Moves 2 squares from starting position
-- Captures diagonally
-- Rook:
-- Horizontal and vertical movement
-- Knight:
-- L-shaped movement
-- Bishop:
-- Diagonal movement
-- Queen:
-- Combines rook and bishop movement
-- King:
-- Moves one square in any direction
+## Advanced Feature
+A simple AI chess opponent was added to the game.
 
----
+### AI Functionality
+- The AI automatically performs a legal move after the human player moves.
+- The AI searches for available legal moves and selects one to play.
+- The feature is integrated directly into the backend game logic and GUI update system.
 
-### 7. Capturing
-- Pieces can capture opponent pieces
-- Captured pieces are removed from the board
-- Cannot capture your own piece
+### Purpose
+This feature demonstrates:
+- Advanced backend integration
+- Automated move generation
+- Additional gameplay functionality
+- Expanded software design complexity
 
 ---
 
-### 8. End Condition
-- Game ends when a King is captured
-- Winner is printed in the console
+# UML Diagram
+The UML class diagram for the project is included in the Phase 3 PDF submission.
+
+The diagram demonstrates:
+- Class structure
+- Inheritance relationships
+- Associations between GUI and backend classes
+- Important methods and attributes
+- Overall software architecture
 
 ---
 
-### 9. Error Handling
-The program handles:
-- Invalid input format
-- Out-of-bounds moves
-- Moving from empty squares
-- Moving opponent’s pieces
-- Invalid piece movement
-- Attempting to capture own piece
+# How to Run the Project
+
+## Requirements
+- Java JDK 17 or newer
+- IntelliJ IDEA (recommended)
+
+## Steps
+1. Clone the repository:
+```bash
+git clone https://github.com/jasonh2276/ChessGame.git
+```
+
+2. Open the project in IntelliJ IDEA.
+
+3. Allow Gradle/project dependencies to load if prompted.
+
+4. Run the main Java file.
+
+5. Use the GUI window to play chess.
 
 ---
 
-## Project Structure
+# Repository Link
+GitHub Repository:
+
+https://github.com/jasonh2276/ChessGame
+
+---
+
+# Screenshots
+The Phase 3 PDF submission includes:
+- GUI gameplay screenshots
+- UML class diagram screenshots
+
+---
+
+# Notes
+This project was developed incrementally across multiple phases.  
+Phase 3 focused primarily on integrating the GUI and backend systems into one complete application while improving software structure and usability.
+
+The final project demonstrates successful integration between:
+- GUI rendering
+- Chess piece logic
+- Game state management
+- User interaction handling

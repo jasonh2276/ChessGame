@@ -124,4 +124,16 @@ public class Board {
         return position.getRow() >= 0 && position.getRow() < 8
                 && position.getCol() >= 0 && position.getCol() < 8;
     }
+    public Board copyBoard() {
+        Board copy = new Board();
+
+        for (int row = 0; row < 8; row++) {
+            for (int col = 0; col < 8; col++) {
+                copy.board[row][col] = this.board[row][col];
+            }
+        }
+
+        copy.kingCaptured = this.kingCaptured;
+        return copy;
+    }
 }
