@@ -41,6 +41,7 @@ public class ChessFrame extends JFrame {
     private Color lightSquare = new Color(240, 217, 181);
     private Color darkSquare = new Color(181, 136, 99);
     private int buttonFontSize = 32;
+    private static final int AI_SEARCH_DEPTH = 3;
 
     public ChessFrame() {
         setTitle("Chess Game - Phase 2 GUI");
@@ -227,6 +228,11 @@ public class ChessFrame extends JFrame {
             return;
         }
 
+        if (!isLegalMove(board, fromRow, fromCol, toRow, toCol, currentTurn)) {
+            JOptionPane.showMessageDialog(this, "That is not a legal move for this piece.");
+            return;
+        }
+
         Move move = new Move(fromRow, fromCol, toRow, toCol, movingPiece, targetPiece, currentTurn);
         moveStack.push(move);
 
@@ -253,6 +259,10 @@ public class ChessFrame extends JFrame {
 
         currentTurn = (currentTurn == PieceColor.WHITE) ? PieceColor.BLACK : PieceColor.WHITE;
         turnLabel.setText("Current Turn: " + currentTurn);
+
+        if (currentTurn == PieceColor.BLACK) {
+            makeAIMove();
+        }
     }
 
     private void undoMove() {
@@ -438,4 +448,280 @@ public class ChessFrame extends JFrame {
         selectedCol = -1;
         refreshBoard();
     }
+
+    private void makeAIMove() {
+        AIMove bestMove = findBestAIMove(PieceColor.BLACK, AI_SEARCH_DEPTH);
+
+        if (bestMove == null) {
+            JOptionPane.showMessageDialog(this, "AI has no legal moves.");
+            currentTurn = PieceColor.WHITE;
+            turnLabel.setText("Current Turn: " + currentTurn);
+            return;
+        }
+
+        Piece movingPiece = board[bestMove.fromRow][bestMove.fromCol];
+        Piece targetPiece = board[bestMove.toRow][bestMove.toCol];
+
+        Move move = new Move(bestMove.fromRow, bestMove.fromCol, bestMove.toRow, bestMove.toCol,
+                movingPiece, targetPiece, PieceColor.BLACK);
+        moveStack.push(move);
+
+        if (targetPiece != null) {
+            whiteCaptured.add(targetPiece.getType().toString());
+        }
+
+        board[bestMove.toRow][bestMove.toCol] = movingPiece;
+        board[bestMove.fromRow][bestMove.fromCol] = null;
+
+        historyEntries.add("AI: " + move.toString());
+
+        refreshBoard();
+        updateHistoryPanels();
+
+        if (targetPiece != null && targetPiece.getType() == PieceType.KING) {
+            JOptionPane.showMessageDialog(this, "BLACK wins! The AI captured the opponent's King.");
+            System.exit(0);
+        }
+
+        currentTurn = PieceColor.WHITE;
+        turnLabel.setText("Current Turn: " + currentTurn + " | AI used minimax with alpha-beta pruning");
+    }
+
+    private AIMove findBestAIMove(PieceColor color, int depth) {
+        List<AIMove> moves = generateLegalMoves(board, color);
+        AIMove bestMove = null;
+        int bestScore = Integer.MIN_VALUE;
+
+        for (AIMove move : moves) {
+            Piece captured = makeTemporaryMove(board, move);
+            int score = minimax(board, depth - 1, Integer.MIN_VALUE, Integer.MAX_VALUE, false);
+            undoTemporaryMove(board, move, captured);
+
+            if (score > bestScore) {
+                bestScore = score;
+                bestMove = move;
+            }
+        }
+
+        return bestMove;
+    }
+
+    private int minimax(Piece[][] currentBoard, int depth, int alpha, int beta, boolean maximizingPlayer) {
+        if (depth == 0 || kingMissing(currentBoard, PieceColor.WHITE) || kingMissing(currentBoard, PieceColor.BLACK)) {
+            return evaluateBoard(currentBoard);
+        }
+
+        PieceColor color = maximizingPlayer ? PieceColor.BLACK : PieceColor.WHITE;
+        List<AIMove> moves = generateLegalMoves(currentBoard, color);
+
+        if (moves.isEmpty()) {
+            return evaluateBoard(currentBoard);
+        }
+
+        if (maximizingPlayer) {
+            int bestScore = Integer.MIN_VALUE;
+            for (AIMove move : moves) {
+                Piece captured = makeTemporaryMove(currentBoard, move);
+                int score = minimax(currentBoard, depth - 1, alpha, beta, false);
+                undoTemporaryMove(currentBoard, move, captured);
+
+                bestScore = Math.max(bestScore, score);
+                alpha = Math.max(alpha, bestScore);
+                if (beta <= alpha) {
+                    break;
+                }
+            }
+            return bestScore;
+        } else {
+            int bestScore = Integer.MAX_VALUE;
+            for (AIMove move : moves) {
+                Piece captured = makeTemporaryMove(currentBoard, move);
+                int score = minimax(currentBoard, depth - 1, alpha, beta, true);
+                undoTemporaryMove(currentBoard, move, captured);
+
+                bestScore = Math.min(bestScore, score);
+                beta = Math.min(beta, bestScore);
+                if (beta <= alpha) {
+                    break;
+                }
+            }
+            return bestScore;
+        }
+    }
+
+    private List<AIMove> generateLegalMoves(Piece[][] currentBoard, PieceColor color) {
+        List<AIMove> moves = new ArrayList<>();
+
+        for (int fromRow = 0; fromRow < 8; fromRow++) {
+            for (int fromCol = 0; fromCol < 8; fromCol++) {
+                Piece piece = currentBoard[fromRow][fromCol];
+                if (piece == null || piece.getColor() != color) {
+                    continue;
+                }
+
+                for (int toRow = 0; toRow < 8; toRow++) {
+                    for (int toCol = 0; toCol < 8; toCol++) {
+                        if (isLegalMove(currentBoard, fromRow, fromCol, toRow, toCol, color)) {
+                            moves.add(new AIMove(fromRow, fromCol, toRow, toCol));
+                        }
+                    }
+                }
+            }
+        }
+
+        return moves;
+    }
+
+    private boolean isLegalMove(Piece[][] currentBoard, int fromRow, int fromCol, int toRow, int toCol, PieceColor color) {
+        if (!inBounds(fromRow, fromCol) || !inBounds(toRow, toCol)) {
+            return false;
+        }
+        if (fromRow == toRow && fromCol == toCol) {
+            return false;
+        }
+
+        Piece movingPiece = currentBoard[fromRow][fromCol];
+        Piece targetPiece = currentBoard[toRow][toCol];
+
+        if (movingPiece == null || movingPiece.getColor() != color) {
+            return false;
+        }
+        if (targetPiece != null && targetPiece.getColor() == color) {
+            return false;
+        }
+
+        int rowDiff = toRow - fromRow;
+        int colDiff = toCol - fromCol;
+        int absRow = Math.abs(rowDiff);
+        int absCol = Math.abs(colDiff);
+
+        switch (movingPiece.getType()) {
+            case PAWN:
+                return isLegalPawnMove(currentBoard, fromRow, fromCol, toRow, toCol, color);
+            case ROOK:
+                return (rowDiff == 0 || colDiff == 0) && isPathClear(currentBoard, fromRow, fromCol, toRow, toCol);
+            case BISHOP:
+                return absRow == absCol && isPathClear(currentBoard, fromRow, fromCol, toRow, toCol);
+            case QUEEN:
+                return (rowDiff == 0 || colDiff == 0 || absRow == absCol)
+                        && isPathClear(currentBoard, fromRow, fromCol, toRow, toCol);
+            case KNIGHT:
+                return (absRow == 2 && absCol == 1) || (absRow == 1 && absCol == 2);
+            case KING:
+                return absRow <= 1 && absCol <= 1;
+            default:
+                return false;
+        }
+    }
+
+    private boolean isLegalPawnMove(Piece[][] currentBoard, int fromRow, int fromCol, int toRow, int toCol, PieceColor color) {
+        int direction = color == PieceColor.WHITE ? -1 : 1;
+        int startRow = color == PieceColor.WHITE ? 6 : 1;
+        int rowDiff = toRow - fromRow;
+        int colDiff = toCol - fromCol;
+        Piece targetPiece = currentBoard[toRow][toCol];
+
+        if (colDiff == 0 && rowDiff == direction && targetPiece == null) {
+            return true;
+        }
+
+        if (colDiff == 0 && fromRow == startRow && rowDiff == 2 * direction
+                && targetPiece == null && currentBoard[fromRow + direction][fromCol] == null) {
+            return true;
+        }
+
+        return Math.abs(colDiff) == 1 && rowDiff == direction
+                && targetPiece != null && targetPiece.getColor() != color;
+    }
+
+    private boolean isPathClear(Piece[][] currentBoard, int fromRow, int fromCol, int toRow, int toCol) {
+        int rowStep = Integer.compare(toRow, fromRow);
+        int colStep = Integer.compare(toCol, fromCol);
+
+        int row = fromRow + rowStep;
+        int col = fromCol + colStep;
+
+        while (row != toRow || col != toCol) {
+            if (currentBoard[row][col] != null) {
+                return false;
+            }
+            row += rowStep;
+            col += colStep;
+        }
+
+        return true;
+    }
+
+    private Piece makeTemporaryMove(Piece[][] currentBoard, AIMove move) {
+        Piece captured = currentBoard[move.toRow][move.toCol];
+        currentBoard[move.toRow][move.toCol] = currentBoard[move.fromRow][move.fromCol];
+        currentBoard[move.fromRow][move.fromCol] = null;
+        return captured;
+    }
+
+    private void undoTemporaryMove(Piece[][] currentBoard, AIMove move, Piece captured) {
+        currentBoard[move.fromRow][move.fromCol] = currentBoard[move.toRow][move.toCol];
+        currentBoard[move.toRow][move.toCol] = captured;
+    }
+
+    private int evaluateBoard(Piece[][] currentBoard) {
+        int score = 0;
+
+        for (int row = 0; row < 8; row++) {
+            for (int col = 0; col < 8; col++) {
+                Piece piece = currentBoard[row][col];
+                if (piece == null) {
+                    continue;
+                }
+
+                int value = getPieceValue(piece.getType());
+                score += piece.getColor() == PieceColor.BLACK ? value : -value;
+            }
+        }
+
+        return score;
+    }
+
+    private int getPieceValue(PieceType type) {
+        switch (type) {
+            case PAWN: return 100;
+            case KNIGHT: return 320;
+            case BISHOP: return 330;
+            case ROOK: return 500;
+            case QUEEN: return 900;
+            case KING: return 20000;
+            default: return 0;
+        }
+    }
+
+    private boolean kingMissing(Piece[][] currentBoard, PieceColor color) {
+        for (int row = 0; row < 8; row++) {
+            for (int col = 0; col < 8; col++) {
+                Piece piece = currentBoard[row][col];
+                if (piece != null && piece.getType() == PieceType.KING && piece.getColor() == color) {
+                    return false;
+                }
+            }
+        }
+        return true;
+    }
+
+    private boolean inBounds(int row, int col) {
+        return row >= 0 && row < 8 && col >= 0 && col < 8;
+    }
+
+    private static class AIMove {
+        int fromRow;
+        int fromCol;
+        int toRow;
+        int toCol;
+
+        AIMove(int fromRow, int fromCol, int toRow, int toCol) {
+            this.fromRow = fromRow;
+            this.fromCol = fromCol;
+            this.toRow = toRow;
+            this.toCol = toCol;
+        }
+    }
+
 }
